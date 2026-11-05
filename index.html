@@ -1,0 +1,315 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Silent Communicator</title>
+
+<style>
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: Arial, sans-serif;
+  background:
+    radial-gradient(circle at top left, #481477, transparent 40%),
+    radial-gradient(circle at bottom right, #32105c, transparent 40%),
+    #080710;
+  color: white;
+  min-height: 100vh;
+  padding: 20px;
+}
+
+.container {
+  max-width: 900px;
+  margin: auto;
+}
+
+header {
+  text-align: center;
+  padding: 35px 10px;
+}
+
+header h1 {
+  color: #d9aaff;
+  font-size: clamp(27px, 5vw, 43px);
+  text-shadow: 0 0 20px #a34cff;
+}
+
+header p {
+  color: #c9b4dc;
+  margin-top: 12px;
+  line-height: 1.5;
+}
+
+.card {
+  background: #1b1228;
+  border: 1px solid #7943a9;
+  border-radius: 18px;
+  padding: 22px;
+  margin: 20px 0;
+  box-shadow: 0 0 22px #8b35d522;
+}
+
+h2 {
+  color: #d9b5ff;
+  margin-bottom: 16px;
+  font-size: 20px;
+}
+
+video {
+  width: 100%;
+  background: #050505;
+  border: 2px solid #9b50e8;
+  border-radius: 12px;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+}
+
+button, select, textarea {
+  font: inherit;
+  border-radius: 10px;
+  padding: 13px;
+}
+
+button {
+  background: linear-gradient(120deg, #7226bd, #a13cff);
+  color: white;
+  border: none;
+  cursor: pointer;
+}
+
+button:hover {
+  filter: brightness(1.2);
+}
+
+select, textarea {
+  width: 100%;
+  background: #100a1b;
+  color: white;
+  border: 1px solid #8145b8;
+}
+
+.controls {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 14px;
+}
+
+.output {
+  min-height: 120px;
+  padding: 20px;
+  display: grid;
+  place-items: center;
+  text-align: center;
+  overflow-wrap: anywhere;
+  background: #100a1b;
+  border: 1px solid #a34cff;
+  border-radius: 12px;
+  color: #e4c6ff;
+  font-size: 23px;
+}
+
+.status, .note {
+  color: #c8b4d8;
+  font-size: 14px;
+  line-height: 1.6;
+  margin-top: 12px;
+}
+
+textarea {
+  min-height: 90px;
+}
+
+footer {
+  text-align: center;
+  padding: 25px;
+  color: #a997ba;
+}
+</style>
+</head>
+
+<body>
+<div class="container">
+
+<header>
+  <h1>AI SILENT COMMUNICATOR</h1>
+  <p>Breaking communication barriers with Indian Sign Language</p>
+</header>
+
+<section class="card">
+  <h2>📷 Live Camera</h2>
+  <video id="camera" autoplay playsinline muted></video>
+
+  <div class="controls">
+    <button onclick="startCamera()">Start Camera</button>
+    <button onclick="stopCamera()">Stop Camera</button>
+  </div>
+
+  <p id="cameraStatus" class="status">Camera is off.</p>
+</section>
+
+<section class="card">
+  <h2>🌍 Select Language</h2>
+
+  <select id="language">
+    <option value="en-IN">English</option>
+    <option value="hi-IN">Hindi</option>
+    <option value="mr-IN">Marathi</option>
+    <option value="te-IN">Telugu</option>
+    <option value="ml-IN">Malayalam</option>
+  </select>
+</section>
+
+<section class="card">
+  <h2>💬 Recognised Sentence</h2>
+
+  <div id="output" class="output">
+    Your sentence will appear here.
+  </div>
+
+  <p id="timer" class="status">Waiting for recognition...</p>
+
+  <div class="controls">
+    <button onclick="speakSentence()">🔊 Speak</button>
+    <button onclick="clearSentence()">Clear</button>
+  </div>
+</section>
+
+<section class="card">
+  <h2>🔊 Test Voice Output</h2>
+
+  <textarea id="testText"
+    placeholder="Type a sentence to test the voice..."></textarea>
+
+  <div class="controls">
+    <button onclick="testVoice()">Test Voice</button>
+  </div>
+
+  <p class="note">
+    Voice availability depends on the browser and installed voices.
+  </p>
+</section>
+
+<footer>
+  AI Silent Communicator | Powered by AI
+</footer>
+
+</div>
+
+<script>
+let stream = null;
+let currentSentence = "";
+let clearTimer = null;
+let countdown = null;
+
+async function startCamera() {
+  try {
+    stream = await navigator.mediaDevices.getUserMedia({
+      video: true,
+      audio: false
+    });
+
+    document.getElementById("camera").srcObject = stream;
+    document.getElementById("cameraStatus").textContent =
+      "Camera is running.";
+
+  } catch (error) {
+    document.getElementById("cameraStatus").textContent =
+      "Camera error: " + error.message;
+  }
+}
+
+function stopCamera() {
+  if (stream) {
+    stream.getTracks().forEach(track => track.stop());
+    stream = null;
+  }
+
+  document.getElementById("camera").srcObject = null;
+  document.getElementById("cameraStatus").textContent =
+    "Camera stopped.";
+}
+
+function showSentence(sentence) {
+  clearTimeout(clearTimer);
+  clearInterval(countdown);
+
+  currentSentence = sentence;
+  document.getElementById("output").textContent = sentence;
+
+  let seconds = 10;
+
+  countdown = setInterval(() => {
+    seconds--;
+    document.getElementById("timer").textContent =
+      "Disappears in " + seconds + " seconds.";
+  }, 1000);
+
+  clearTimer = setTimeout(() => {
+    clearSentence();
+  }, 10000);
+}
+
+function clearSentence() {
+  clearTimeout(clearTimer);
+  clearInterval(countdown);
+
+  currentSentence = "";
+
+  document.getElementById("output").textContent =
+    "Waiting for the next sentence.";
+
+  document.getElementById("timer").textContent =
+    "Sentence cleared.";
+}
+
+function speakSentence() {
+  speak(currentSentence);
+}
+
+function testVoice() {
+  speak(document.getElementById("testText").value);
+}
+
+function speak(text) {
+  if (!text.trim()) return;
+
+  if (!("speechSynthesis" in window)) {
+    alert("Speech is not supported in this browser.");
+    return;
+  }
+
+  speechSynthesis.cancel();
+
+  const utterance = new SpeechSynthesisUtterance(text);
+  utterance.lang = document.getElementById("language").value;
+
+  speechSynthesis.speak(utterance);
+}
+
+// Future pretrained ISL model integration point.
+window.receiveISLResult = function(result) {
+  if (!result || !result.translations) return;
+
+  const selectedLanguage =
+    document.getElementById("language").value;
+
+  const sentence = result.translations[selectedLanguage];
+
+  if (!sentence || typeof result.confidence !== "number" ||
+      result.confidence < 0.80) {
+    return;
+  }
+
+  showSentence(sentence);
+  speak(sentence);
+};
+</script>
+</body>
+</html>
