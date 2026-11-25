@@ -30,6 +30,26 @@ def extract_zip(zip_path, destination):
     with zipfile.ZipFile(zip_path, "r") as z:
         z.extractall(destination)
 
+# Download model ZIPs from Hugging Face
+import requests
+
+def download_model(url, filename):
+    response = requests.get(url, timeout=300)
+    response.raise_for_status()
+
+    with open(filename, "wb") as f:
+        f.write(response.content)
+
+download_model(
+    "https://huggingface.co/spaces/justishaanidk/AI-Silent-Communicator/resolve/main/AI_Silent_Communicator_Website_Model.zip",
+    "AI_Silent_Communicator_Website_Model.zip"
+)
+
+download_model(
+    "https://huggingface.co/spaces/justishaanidk/AI-Silent-Communicator/resolve/main/ISL_Hand_Augmented_Backup.zip",
+    "ISL_Hand_Augmented_Backup.zip"
+)
+
 extract_zip(
     "AI_Silent_Communicator_Website_Model.zip",
     "alphabet_files"
@@ -39,7 +59,6 @@ extract_zip(
     "ISL_Hand_Augmented_Backup.zip",
     "landmark_files"
 )
-
 # ==========================================
 # 2. LOAD ALPHABET MODEL
 # ==========================================
